@@ -51,12 +51,12 @@ local jokers = {
     fiveghost = {
         name = "Five Ghost Joker",
         text = {
-            "{C:green}#2# in 2{} chance to",
-            "gain {C:mult}+5{} Mult when",
+            "{C:green}#2# in 5{} chance to",
+            "gain {C:mult}+20{} Mult when",
             "{C:spectral}Spectral{} is used",
             "{C:inactive}(Currently{} {C:mult}+#1#{} {C:inactive}Mult){}"
         },
-        config = { extra = { mult = 0, a_mult = 5, odds = 2, message } },
+        config = { extra = { mult = 0, a_mult = 20, odds = 5, message } },
         pos = { x = 0, y = 0 },
         rarity = 2,
         cost = 5,
