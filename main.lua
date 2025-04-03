@@ -138,9 +138,9 @@ local jokers = {
     wildreversal = {
         name = "Wild Reversal",
         text = {
-            "Starts {C:attention}retriggering{}",
-            "all played cards",
-            "after {C:attention}2{} rounds",
+            "After {C:attention}#2#{} rounds,",
+            "this card becomes",
+            "{C:spectral}Retrigger all played card{}",
             "{C:inactive}(Currently{} {C:attention}#1#{}{C:inactive}/#2#){}"
         },
         config = { extra = { round_tally = 0, round = 2} },
