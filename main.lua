@@ -1,6 +1,6 @@
 --- STEAMODDED HEADER
 --- MOD_NAME: Vanii-llaPlus
---- MOD_ID: Vanii-llaPlus
+--- MOD_ID: Vanii-llaPlus-main
 --- MOD_AUTHOR: [Vanii]
 --- MOD_DESCRIPTION: A Joker that only gains Mult when scoring Diamonds or Hearts.
 
@@ -305,7 +305,7 @@ function SMODS.INIT.VaniillaPlus()
         joker:register()
 
         if not v.atlas then
-            SMODS.Sprite:new("j_" .. k, SMODS.findModByID("Vanii-llaPlus").path, "j_" .. k .. ".png", 71, 95, "asset_atli")
+            SMODS.Sprite:new("j_" .. k, SMODS.findModByID("Vanii-llaPlus-main").path, "j_" .. k .. ".png", 71, 95, "asset_atli")
                 :register()
         end
 
