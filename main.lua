@@ -51,12 +51,13 @@ local jokers = {
     fiveghost = {
         name = "Five Ghost Joker",
         text = {
-            "{C:green}#2# in 5{} chance to",
-            "gain {C:mult}+20{} Mult when",
-            "{C:spectral}Spectral{} is used",
-            "{C:inactive}(Currently{} {C:mult}+#1#{} {C:inactive}Mult){}"
+            "Get {C:attention}one{} of the effects",
+            "when {C:spectral}Spectral{} is used:",
+            "{C:mult}+5{} Mult, {C:chips}+25{} Chips",
+            "{X:red,C:white}X0.25{}, {C:attention}$10{} or {C:attention}Nothing{}",
+            "{C:inactive}(Currently{} {C:chips}+#1#{}, {C:mult}+#2#{}, {X:red,C:white}X#3#{}{C:inactive}){}"
         },
-        config = { extra = { mult = 0, a_mult = 20, odds = 5, message } },
+        config = { extra = { chips = 0, mult = 0, x_mult = 1 } },
         pos = { x = 0, y = 0 },
         rarity = 2,
         cost = 5,
@@ -68,33 +69,64 @@ local jokers = {
         soul_pos = nil,
 
         calculate = function(self, context)
-            if context.using_consumeable and context.consumeable.ability.set == 'Spectral' then
-                if pseudorandom('fiveghost') < G.GAME.probabilities.normal/self.ability.extra.odds and not context.blueprint then
-                    self.ability.extra.mult = self.ability.extra.mult + self.ability.extra.a_mult
-                    G.E_MANAGER:add_event(Event({
-                        func = function()
-                            card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_mult',vars={self.ability.extra.a_mult}}});
-                        return true
-                    end}))
-                else
-                    G.E_MANAGER:add_event(Event({
-                        func = function()
-                            card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize('k_nope_ex')});
-                        return true
-                    end}))
+            if context.using_consumeable then
+                if not context.blueprint and (context.consumeable.ability.set == "Spectral") then
+                    local rand = math.random(1, 5)
+                    if rand == 1 then
+                        -- multiplier
+                        self.ability.extra.mult = self.ability.extra.mult + 5
+                        G.E_MANAGER:add_event(Event({
+                            func = function()
+                                card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_mult',vars={5}}});
+                                return true
+                            end
+                        }))
+                    elseif rand == 2 then
+                        -- chips
+                        self.ability.extra.chips = self.ability.extra.chips + 25
+                        G.E_MANAGER:add_event(Event({
+                            func = function()
+                                card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_chips',vars={10}}});
+                                return true
+                            end
+                        }))
+                    elseif rand == 3 then
+                        -- x_mult
+                        self.ability.extra.x_mult = self.ability.extra.x_mult + 0.25
+                        G.E_MANAGER:add_event(Event({
+                            func = function()
+                                card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_xmult',vars={0.25}}});
+                                return true
+                            end
+                        }))
+                    elseif rand == 4 then
+                        -- money
+                        ease_dollars(10)
+                        G.GAME.dollar_buffer = (G.GAME.dollar_buffer or 0) + 10
+                        G.E_MANAGER:add_event(Event({func = (function() G.GAME.dollar_buffer = 0; return true end)}))
+                    else
+                        -- badluck
+                        G.E_MANAGER:add_event(Event({
+                            func = function()
+                                card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize('k_nope_ex')});
+                                return true
+                            end
+                        }))
+                    end
                 end
             end
             if SMODS.end_calculate_context(context) then
                 return {
                     chips = self.ability.extra.chips,
                     mult = self.ability.extra.mult,
+                    x_mult = self.ability.extra.x_mult,
                     card = self,
                 }
             end
         end,
 
         loc_def = function(self) --defines variables to use in the UI. you can use #1# for example to show the mult variable, and #2# for x_mult
-            return {self.ability.extra.mult, G.GAME and G.GAME.probabilities.normal or 1 }
+            return {self.ability.extra.chips, self.ability.extra.mult, self.ability.extra.x_mult}
         end,
     },
 
@@ -292,6 +324,53 @@ local jokers = {
 
         loc_def = function(self) --defines variables to use in the UI. you can use #1# for example to show the mult variable, and #2# for x_mult
             return { self.ability.extra.mult, self.ability.extra.x_mult }
+        end,
+    },
+
+    clover = {
+        name = "Clover",
+        text = {
+            "All played cards",
+            "become {C:attention}Lucky{} cards",
+            "every {C:attention}4{} hands played",
+            "{C:inactive}(Currently{} {C:attention}#1#{}{C:inactive}/4){}"
+        },
+        config = { extra = { hands = 0 } },
+        pos = { x = 0, y = 0 },
+        rarity = 2,
+        cost = 5,
+        blueprint_compat = true,
+        eternal_compat = true,
+        unlocked = true,
+        discovered = true,
+        atlas = nil,
+        soul_pos = nil,
+
+        calculate = function(self, context)
+            if self.ability.extra.hands == 4 then
+                local eval = function(card) return (self.ability.extra.hands == 4) end
+                    juice_card_until(self, eval, true)
+                if context.before and not context.blueprint then
+                    for k, v in ipairs(context.scoring_hand) do
+                        v.ability.effect = 'Lucky Card'
+                        G.E_MANAGER:add_event(Event({
+                            func = function()
+                                v:juice_up()
+                            return true
+                        end}))
+                    end
+                end
+            end
+            if context.end_of_round and not context.individual and not context.repetition and not context.blueprint then
+                self.ability.extra.hands = self.ability.extra.hands + 1
+                if self.ability.extra.hands >= 4 then
+                    self.ability.extra.hands = 0
+                end
+            end
+        end,
+
+        loc_def = function(self) --defines variables to use in the UI. you can use #1# for example to show the mult variable, and #2# for x_mult
+            return { self.ability.extra.hands }
         end,
     },
 }
