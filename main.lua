@@ -348,11 +348,9 @@ local jokers = {
 
         calculate = function(self, context)
             if self.ability.extra.hands == 4 then
-                local eval = function(card) return (self.ability.extra.hands == 4) end
-                    juice_card_until(self, eval, true)
                 if context.before and not context.blueprint then
                     for k, v in ipairs(context.scoring_hand) do
-                        v.ability.effect = 'Lucky Card'
+                        v:set_ability(G.P_CENTERS.m_lucky, nil, true)
                         G.E_MANAGER:add_event(Event({
                             func = function()
                                 v:juice_up()
@@ -361,9 +359,9 @@ local jokers = {
                     end
                 end
             end
-            if context.end_of_round and not context.individual and not context.repetition and not context.blueprint then
+            if SMODS.end_calculate_context(context) and not context.blueprint then
                 self.ability.extra.hands = self.ability.extra.hands + 1
-                if self.ability.extra.hands >= 4 then
+                if self.ability.extra.hands > 4 then
                     self.ability.extra.hands = 0
                 end
             end
